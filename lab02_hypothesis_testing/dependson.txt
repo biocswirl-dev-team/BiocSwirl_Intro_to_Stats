@@ -1,0 +1,5 @@
+BiocManager
+tidyverse
+broom
+patchwork
+ggmosaic

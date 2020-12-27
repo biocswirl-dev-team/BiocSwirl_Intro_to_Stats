@@ -1,10 +1,128 @@
 - Class: meta
   Course: intro_to_stats
   Lesson: lab02_hypothesis_testing
-  Author: your name goes here
+  Author: Julia Philipp
   Type: Standard
   Organization: your organization's name goes here
   Version: 2.4.5
 
 - Class: text
   Output: Welcome to the hypothesis testing lesson!
+  
+- Class: text
+  Output: In this lesson, we will work the RNAseq data of pancreatic neuroendocrine tumors (object 'rnaseq') as well as the patient metadata (object 'metadata'). Both objects are preloaded into your environment.
+  
+- Class: text
+  Output: In the previous tutorial, we saw how we can compare continuous variables between two groups. In other words, one variable was continuous and the other was categorical (with only two groups). In this tutorial, we will see how we can compare two categorical variables.
+
+- Class: cmd_question
+  Output: Let's explore the patient metadata
+  CorrectAnswer: metadata
+  AnswerTests: omnitest(correctExpr = 'metadata')
+  Hint: Try typing 'metadata'
+  
+- Class: cmd_question
+  Output: "For small samples, we tend to use the Fisher's exact test. Before running the test, we need to consider the contingency table. Let's focus on the two columns for now: sex and metastasis. Select these two columns from the metadata dataframe."
+  CorrectAnswer: select(metadata, Sex, Metastasis)
+  AnswerTests: omnitest(correctExpr = 'select(metadata, Sex, Metastasis)')
+  Hint: Try typing 'select(metadata, Sex, Metastasis)'
+  
+- Class: cmd_question
+  Output: In this case, the contingency table counts up the number for each pair of values. There are two values for sex (male and female) and two values for metastasis ('True' or 'False'). Using the tidyverse, we could obtain those counts as follows, where `n()` counts the number of rows in each group.
+  CorrectAnswer: metadata %>% group_by(Sex, Metastasis) %>% summarize(n = n())
+  AnswerTests: omnitest(correctExpr = 'metadata %>% group_by(Sex, Metastasis) %>% summarize(n = n())')
+  Hint: Try 'metadata %>% group_by(Sex, Metastasis) %>% summarize(n = n())'
+
+- Class: cmd_question
+  Output: The `count()` dplyr function is a shortcut for this common pattern. Try it out!
+  CorrectAnswer: count(metadata, Sex, Metastasis)
+  AnswerTests: omnitest(correctExpr = 'count(metadata, Sex, Metastasis)')
+  Hint: Try typing 'count(metadata, Sex, Metastasis)'
+  
+- Class: cmd_question
+  Output: "Normally, contingency tables are formatted in two dimensions, as follows. Execute this: count(metadata, Sex, Metastasis) %>% pivot_wider(id_cols = Metastasis, values_from = n, names_from = Sex, names_prefix = 'Sex_')"
+  CorrectAnswer: count(metadata, Sex, Metastasis) %>% pivot_wider(id_cols = Metastasis, values_from = n, names_from = Sex, names_prefix = "Sex_")
+  AnswerTests: omnitest(correctExpr = 'count(metadata, Sex, Metastasis) %>% pivot_wider(id_cols = Metastasis, values_from = n, names_from = Sex, names_prefix = "Sex_")')
+  Hint: Try executing the command above.
+  
+- Class: text
+  Output: Visually, you can check if there is a trend for more metastases among males or females. The null hypothesis is that there is no difference between the proportion of males-to-females for cases with metastases and those without, or vice versa. We can calculate these proportions. Based on this, it seems that females are more likely to have metastases, but is this significant? This is where the Fisher's exact test comes into play.
+  
+- Class: cmd_question
+  Output: "But first, let's calculate the proportions. Use the previous tidyverse command and expand it using mutate() to calculate 'Proportions = Sex_F/Sex_M'."
+  CorrectAnswer: count(metadata, Sex, Metastasis) %>% pivot_wider(id_cols = Metastasis, values_from = n, names_from = Sex, names_prefix = 'Sex_') %>% mutate(Proportion = Sex_F / Sex_M)
+  AnswerTests: omnitest(correctExpr = 'count(metadata, Sex, Metastasis) %>% pivot_wider(id_cols = Metastasis, values_from = n,names_from = Sex, names_prefix = "Sex_") %>% mutate(Proportion = Sex_F / Sex_M)')
+  Hint: Try typing 'count(metadata, Sex, Metastasis) %>% pivot_wider(id_cols = Metastasis, values_from = n,names_from = Sex, names_prefix = "Sex_") %>% mutate(Proportion = Sex_F / Sex_M)'
+  
+- Class: text
+  Output: The `fisher.test()` does the counting for you if you provide two "parallel" vectors consisting of categorical values. The order of the vectors doesn't matter.
+  
+- Class: cmd_question
+  Output: Use fisher.test() on metadata$Sex and metadata$Metastasis
+  CorrectAnswer: fisher.test(metadata$Sex, metadata$Metastasis)
+  AnswerTests: any_of_exprs('fisher.test(metadata$Sex, metadata$Metastasis)', 'fisher.test(metadata$Metastasis, metadata$Sex)')
+  Hint: Try typing 'fisher.test(metadata$Sex, metadata$Metastasis)'
+  
+- Class: text
+  Output: As you can see, The P-value is 0.5, so the trend we noticed isn't significant, presumably due to the small sample size.
+  
+- Class: text
+  Output: "Let's look at another pair of categorical variables: subtype and metastasis. Here, we are using alternative approaches to create the contingency table. `table()` works like `fisher.test()` by taking in two 'parallel vectors'"
+
+- Class: cmd_question
+  Output: Use 'table()' on metadata$Subtype and metadata$Sex.
+  CorrectAnswer: table(metadata$Subtype, metadata$Sex)
+  AnswerTests: omnitest(correctExpr = 'table(metadata$Subtype, metadata$Sex)')
+  Hint: Try typing 'table(metadata$Subtype, metadata$Sex)'
+  
+- Class: text
+  Output: On the other hand, `xtabs()` works off of a data frame, but has an unusual interface. The `~ Subtype + Metastasis` part is called a formula, which we will revisit later when we tackle linear regression. The main advantage of `xtabs()` is its conciseness.
+  
+- Class: cmd_question
+  Output: "Try out the following command: 'xtabs(~ Subtype + Metastasis, metadata)'"
+  CorrectAnswer: xtabs(~ Subtype + Metastasis, metadata)
+  AnswerTests: omnitest(correctExpr = 'xtabs(~ Subtype + Metastasis, metadata)')
+  Hint: Try typing 'xtabs(~ Subtype + Metastasis, metadata)'
+  
+- Class: text
+  Output: From the contingency tables above, you can see whether an association (positive or negative) exists between the variables if there is a relative abundance or depletion along the diagonal. Here, you can see that the diagonal has relatively few cases (4 + 4 = 8) compared to the rest of the table.
+
+- Class: cmd_question
+  Output: Let's verify with a statistical test, providing the contingency table directly to `fisher.test()`
+  CorrectAnswer: fisher.test(xtabs(~ Subtype + Metastasis, metadata))
+  AnswerTests: omnitest(correctExpr = 'fisher.test(xtabs(~ Subtype + Metastasis, metadata))')
+  Hint: Use fisher.test() around the xtabs command from above.
+  
+- Class: text
+  Output: "In this case, the association is significant (P-value = 0.006). In other words, based on the contingency table, we can say that the A-D-M mutant cases are significantly more likely to develop metastases. Importantly, we cannot say that the mutations cause metastases: correlation does not imply causation. But this generates a hypothesis that can be investigated with additional experiments."
+  
+- Class: text
+  Output: Let's look how we can visualize these results. There are only a few ways of visualizing contingency tables.
+  
+- Class: cmd_question
+  Output: First, you can encode the counts as the point size. Use ggplot, with 'Subtype' on the x-axis, 'Metastasis' on the y-axis and the function geom_count().
+  CorrectAnswer: ggplot(metadata, aes(x = Subtype, y = Metastasis)) + geom_count()
+  AnswerTests: omnitest(correctExpr = 'ggplot(metadata, aes(x = Subtype, y = Metastasis)) + geom_count()')
+  Hint: Try typing 'ggplot(metadata, aes(x = Subtype, y = Metastasis)) + geom_count()'
+
+- Class: cmd_question
+  Output: "Second, there is the more customized mosaic plot from the package 'ggmosaic'. Try the following: 'ggplot(metadata) +geom_mosaic(aes(x = product(Metastasis, Subtype), fill = Metastasis))'"
+  CorrectAnswer: ggplot(metadata) + geom_mosaic(aes(x = product(Metastasis, Subtype), fill = Metastasis))
+  AnswerTests: omnitest(correctExpr = 'ggplot(metadata) + geom_mosaic(aes(x = product(Metastasis, Subtype), fill = Metastasis))')
+  Hint: Try executing the command mentioned above.
+  
+- Class: text
+  Output: "A mosaic plot looks like a stacked relative barplot (adding up to 100%), but the width of the bars is proportional to the sample size of that bar. For example, from the plot below, we can see that there are more A-D-M mutant cases than WT cases (see numbers below). From this plot, we can see how the 'metastasis rate' is much higher in mutant cases."
+  
+- Class: text
+  Output: However, it might make more sense to put the metastasized cases at the bottom and set the WT group as the left-most reference group. For that purpose we will have to mutate the Metastasis column into characters and then change the order (relevel) of the factors 'Metastasis' and 'Subtype'.
+
+- Class: cmd_question
+  Output: "Try the following: 'metadata %>% mutate(Metastasis = as.character(Metastasis), Metastasis = fct_relevel(Metastasis, 'TRUE', 'FALSE'), Subtype = fct_relevel(Subtype, 'A-D-M WT')) %>% ggplot() + geom_mosaic(aes(x = product(Metastasis, Subtype), fill = Metastasis)) + scale_fill_discrete(limits = c('FALSE', 'TRUE'))'"
+  CorrectAnswer: metadata %>% mutate(Metastasis = as.character(Metastasis), Metastasis = fct_relevel(Metastasis, 'TRUE', 'FALSE'), Subtype = fct_relevel(Subtype, 'A-D-M WT')) %>% ggplot() + geom_mosaic(aes(x = product(Metastasis, Subtype), fill = Metastasis)) + scale_fill_discrete(limits = c('FALSE', 'TRUE'))
+  AnswerTests: omnitest(correctExpr = "metadata %>% mutate(Metastasis = as.character(Metastasis), Metastasis = fct_relevel(Metastasis, 'TRUE', 'FALSE'), Subtype = fct_relevel(Subtype, 'A-D-M WT')) %>% ggplot() + geom_mosaic(aes(x = product(Metastasis, Subtype), fill = Metastasis)) + scale_fill_discrete(limits = c('FALSE', 'TRUE'))")
+  Hint: Copy and execute the command above.
+
+### Chi-squared test
+
+###  Multiple hpothesis testing
