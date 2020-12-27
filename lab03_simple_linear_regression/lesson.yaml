@@ -1,10 +1,101 @@
 - Class: meta
   Course: intro_to_stats
   Lesson: lab03_simple_linear_regression
-  Author: your name goes here
+  Author: Julia Philipp
   Type: Standard
   Organization: your organization's name goes here
   Version: 2.4.5
 
 - Class: text
   Output: Welcome to the simple linear regression lesson!
+  
+- Class: cmd_question
+  Output: We will start by looking at a dataframe called 'actb' which contains both the RNAseq and MicroArray data for the gene ACTB. Take a look!
+  CorrectAnswer: actb
+  AnswerTests: omnitest(correctExpr = 'actb')
+  Hint: Try typing 'actb'
+  
+- Class: cmd_question
+  Output: 'We can calculate the correlation between both datasets using cor(). Try the following: cor(actb$rnaseq, actb$array, method = "pearson")'
+  CorrectAnswer: cor(actb$rnaseq, actb$array, method = "pearson")
+  AnswerTests: omnitest(correctExpr = 'cor(actb$rnaseq, actb$array, method = "pearson")')
+  Hint: Copy the correlation funciton from above.
+  
+- Class: text
+  Output: However, this correlation doesn't give us a way of understanding the relationship between both methods (just the correlation)
+  
+- Class: text
+  Output: "The classic method for achieving this is the simple linear regression, which is known as a trendline in Excel. It's your old school `y = mx + b` formula. From a dataset, R can estimate the values for the slope (m) and the Y-axis intercept (b) using the `lm()` function (short for linear model). Before computing the linear regression, we should remove the outliers that we've previously identified, namely those below 10.15 (rnaseq)"
+  
+- Class: text
+  Output: "To highlight how important this step is, let's compare what a linear regression would look like with and without the outliers. You can easily visualize a linear model with ggplot using the `geom_smooth()` geometry, which is often added as a layer on top of `geom_point()`. The black line represents the model using all data while the salmon line represents the model when excluding the outliers (using the same definition as the previous lab)"
+
+- Class: text
+  Output: "Something new here is the `data` argument in the second `geom_smooth()`. You can provide a function, which is run with the ggplot data as input. In this case, the function filters the data for non-outlier"
+  
+- Class: cmd_question
+  Output: "Try executing the following: 'actb %>% mutate(is_outlier = rnaseq < 10.15) %>% ggplot(aes(x = rnaseq, y = array)) + geom_point(aes(colour = is_outlier)) + geom_smooth(method = 'lm', colour = 'black') + geom_smooth(data = function (x) filter(x, is_outlier == FALSE), method = 'lm', colour = 'salmon')'"
+  CorrectAnswer: actb %>% mutate(is_outlier = rnaseq < 10.15) %>% ggplot(aes(x = rnaseq, y = array)) + geom_point(aes(colour = is_outlier)) + geom_smooth(method = 'lm', colour = 'black') + geom_smooth(data = function (x) filter(x, is_outlier == FALSE), method = 'lm', colour = 'salmon')
+  AnswerTests: omnitest(correctExpr = "actb %>% mutate(is_outlier = rnaseq < 10.15) %>% ggplot(aes(x = rnaseq, y = array)) + geom_point(aes(colour = is_outlier)) + geom_smooth(method = 'lm', colour = 'black') + geom_smooth(data = function (x) filter(x, is_outlier == FALSE), method = 'lm', colour = 'salmon')")
+  Hint: Copy and execute the code snippet above.
+  
+- Class: cmd_question
+  Output: We can see the difference is important, so we will drop the outliers from all further computations. Use the function filter() to filter out rnaseq values >= 10.15.
+  CorrectAnswer: actb <- filter(actb, rnaseq >= 10.15)
+  AnswerTests: omnitest(correctExpr = 'actb <- filter(actb, rnaseq >= 10.15)')
+  Hint: Try typing 'actb <- filter(actb, rnaseq >= 10.15)'
+  
+- Class: text
+  Output: Now, on to the simple linear regression!
+  
+- Class: text
+  Output: The function we will be using is lm(). The first argument is the variables that you want to examine as a formula. Formulas in R use the `~` symbol, and in this case, the left-hand side (LHS) corresponds to the dependent variables and the right-hand side (RHS) corresponds to the independent variables. Roughly speaking, the `~` splits the variables like the `=` in the formula above. In this case, let's set the RNA-seq data as the independent variable. The second argument is the data frame. 
+  
+- Class: cmd_question
+  Output: Try to apply what you just learned about using the lm() function on the dataframe 'actb' comparing the variables 'array' and 'rnaseq' and assign the results to 'actb_lm'.
+  CorrectAnswer: actb_lm <- lm(array ~ rnaseq, actb)
+  AnswerTests: omnitest(correctExpr = 'actb_lm <- lm(array ~ rnaseq, actb)')
+  Hint: Try typing 'actb_lm <- lm(array ~ rnaseq, actb)'
+  
+- Class: cmd_question
+  Output: Now recall 'actb_lm'
+  CorrectAnswer: actb_lm
+  AnswerTests: omnitest(correctExpr = 'actb_lm')
+  Hint: Try typing 'actb_lm'
+  
+- Class: cmd_question
+  Output: You can obtain the coefficients directly using the `coef()` function on `actb_lm`.
+  CorrectAnswer: coef(actb_lm)
+  AnswerTests: omnitest(correctExpr = 'coef(actb_lm)')
+  Hint: Try typing 'coef(actb_lm)'
+  
+- Class: cmd_question
+  Output: "There are a number of functions that can be run on the `lm` value, but the main one is `summary()`. The most important parts of the summary are the extra details on the coefficients, including whether they significantly deviate from 0. Try it out!"
+  CorrectAnswer: summary(actb_lm)
+  AnswerTests: omnitest(correctExpr = 'summary(actb_lm)')
+  Hint: Try typing 'summary(actb_lm)'
+  
+- Class: text
+  Output: A few additional observations can be made from this output. First, the square-root of the multiple R-squared corresponds to the Pearson correlation coefficient from earlier. sqrt(0.7251).
+  
+- Class: text
+  Output: "Second, the P-value associated with the rnaseq variable (which is equal to the P-value of the overall model at the bottom) is the same as the P-value from the Pearson correlation test. This confirms the underlying linear nature of the Pearson correlation"
+
+- Class: cmd_question
+  Output: "Try the following: 'cor.test(actb$rnaseq, actb$array, method = 'pearson')'"
+  CorrectAnswer: cor.test(actb$rnaseq, actb$array, method = "pearson")
+  AnswerTests: omnitest(correctExpr = 'cor.test(actb$rnaseq, actb$array, method = "pearson")')
+  Hint: Copy the code from above.
+  
+- Class: text
+  Output: "So far, we haven't learned much from the linear model that we didn't  already know from the correlation test. The utility of linear models is that they can be used to predict new values"
+  
+- Class: cmd_question
+  Output: "Let's create some new data with 'new_data <- data.frame(rnaseq = c(10, 11, 12))'"
+  CorrectAnswer: new_data <- data.frame(rnaseq = c(10, 11, 12))
+  AnswerTests: omnitest(correctExpr = 'new_data <- data.frame(rnaseq = c(10, 11, 12))')
+  Hint: Copy the code from above.
+  
+  
+
+
