@@ -1,0 +1,10 @@
+- Class: meta
+  Course: intro_to_stats
+  Lesson: lab02_hypothesis_testing
+  Author: your name goes here
+  Type: Standard
+  Organization: your organization's name goes here
+  Version: 2.4.5
+
+- Class: text
+  Output: Welcome to the hypothesis testing lesson!

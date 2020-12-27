@@ -1,0 +1,10 @@
+- Class: meta
+  Course: intro_to_stats
+  Lesson: lab08_high_dimensional_data
+  Author: your name goes here
+  Type: Standard
+  Organization: your organization's name goes here
+  Version: 2.4.5
+
+- Class: text
+  Output: Welcome to the 'dealing with high dimensional data' lesson!
