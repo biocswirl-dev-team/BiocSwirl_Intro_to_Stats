@@ -91,11 +91,140 @@
   Output: "So far, we haven't learned much from the linear model that we didn't  already know from the correlation test. The utility of linear models is that they can be used to predict new values"
   
 - Class: cmd_question
-  Output: "Let's create some new data with 'new_data <- data.frame(rnaseq = c(10, 11, 12))'"
+  Output: "Let's create some new rnaseq data with 'new_data <- data.frame(rnaseq = c(10, 11, 12))'"
   CorrectAnswer: new_data <- data.frame(rnaseq = c(10, 11, 12))
   AnswerTests: omnitest(correctExpr = 'new_data <- data.frame(rnaseq = c(10, 11, 12))')
   Hint: Copy the code from above.
   
+- Class: cmd_question
+  Output: We can now try to predict new_data$array based on new_data$rnaseq and the linear regression model actb_lm. Try it out. Use the function predict() and assign the results to new_data$array.
+  CorrectAnswer: new_data$array <- predict(actb_lm, new_data)
+  AnswerTests: omnitest(correctExpr = 'new_data$array <- predict(actb_lm, new_data)')
+  Hint: Try typing 'new_data$array <- predict(actb_lm, new_data)'
+  
+- Class: cmd_question
+  Output: Take a look at new_data!
+  CorrectAnswer: new_data
+  AnswerTests: omnitest(correctExpr = 'new_data')
+  Hint: Try typing 'new_data'
+  
+- Class: text
+  Output: As expected, if we plotted these new data points, they would land on the linear model line.
+  
+- Class: cmd_question
+  Output: "Let's plot our 'actb' data again and add the new data as an extra layer with geom_point(): 'ggplot(actb, aes(x = rnaseq, y = array)) + geom_point() + geom_smooth(method = 'lm', fullrange = TRUE) + geom_point(data = new_data, colour = 'red', size = 3)'"
+  CorrectAnswer: ggplot(actb, aes(x = rnaseq, y = array)) + geom_point() + geom_smooth(method = "lm", fullrange = TRUE) + geom_point(data = new_data, colour = "red", size = 3)
+  AnswerTests: omnitest(correctExpr = 'ggplot(actb, aes(x = rnaseq, y = array)) + geom_point() + geom_smooth(method = "lm", fullrange = TRUE) + geom_point(data = new_data, colour = "red", size = 3)')
+  Hint: Copy the code from above.
+  
+- Class: text
+  Output: "In short, if we trusted this model, we could rely on it to predict the microarray values for ACTB from the rnaseq values. That's a big IF though."
+  
+- Class: text
+  Output: "Visually, the actual data points do hover around the line, but not particularly close for most points. Quantitatively, the vertical difference between the data points and the line is called the residual. For a perfect model, the residuals would all be zero because there would be no distance between the points and the line. However, that's practically never the case"
+
+- Class: cmd_question
+  Output: "Execute the following to visualize the residuals: 'actb %>% mutate(residual = actb_lm$residuals) %>% ggplot(aes(x = rnaseq, y = residual)) + geom_hline(yintercept = 0) + geom_point()'"
+  CorrectAnswer: actb %>% mutate(residual = actb_lm$residuals) %>% ggplot(aes(x = rnaseq, y = residual)) + geom_hline(yintercept = 0) + geom_point()
+  AnswerTests: omnitest(correctExpr = 'actb %>% mutate(residual = actb_lm$residuals) %>% ggplot(aes(x = rnaseq, y = residual)) + geom_hline(yintercept = 0) + geom_point()')
+  Hint: Copy the code from above.
+  
+- Class: text
+  Output: "If we wanted to build a model to convert rnaseq values to microarray values, putting trust into a single gene would be unwise. Let's instead fit a linear model between both methods for all genes and plot the resulting coefficients to see how much they vary."
+  
+- Class: text
+  Output: "In this case, I don't need to specify the data. We are also calculating the mean expression for later exploration. Note that we are not excluding outliers in this analysis, which we know can negatively affect the performance of the model fitting."
+
+- Class: cmd_question
+  Output: "Execute the following code to use the full rnaseq and microarray data for our model: 'lm_coefs <- inner_join(rnaseq_long, array_long, by = c('Gene','Tumour'), suffix = c('_R', '_A')) %>% group_by(Gene) %>% filter(sd(Expr_R) > 0, sd(Expr_A) > 0) %>% summarize(Mean_R = mean(Expr_R), Mean_A = mean(Expr_A), Model = list(lm(Expr_A ~ Expr_R))) %>% rowwise() %>% mutate(Intercept = coef(Model)[[1]], Slope = coef(Model)[[2]])'"
+  CorrectAnswer: lm_coefs <- inner_join(rnaseq_long, array_long, by = c('Gene','Tumour'), suffix = c('_R', '_A')) %>% group_by(Gene) %>% filter(sd(Expr_R) > 0, sd(Expr_A) > 0) %>% summarize(Mean_R = mean(Expr_R), Mean_A = mean(Expr_A), Model = list(lm(Expr_A ~ Expr_R))) %>% rowwise() %>% mutate(Intercept = coef(Model)[[1]], Slope = coef(Model)[[2]])
+  AnswerTests: omnitest(correctExpr = 'lm_coefs <- inner_join(rnaseq_long, array_long, by = c('Gene','Tumour'), suffix = c('_R', '_A')) %>% group_by(Gene) %>% filter(sd(Expr_R) > 0, sd(Expr_A) > 0) %>% summarize(Mean_R = mean(Expr_R), Mean_A = mean(Expr_A), Model = list(lm(Expr_A ~ Expr_R))) %>% rowwise() %>% mutate(Intercept = coef(Model)[[1]], Slope = coef(Model)[[2]])')
+  Hint: Copy the code from above.
+  
+- Class: cmd_question
+  Output: "Let's plot the distribution of the Y intercepts with the following code: 'ggplot(lm_coefs, aes(x = Intercept)) + geom_histogram(boundary = 0, binwidth = 0.5, colour = 'white')'"
+  CorrectAnswer: ggplot(lm_coefs, aes(x = Intercept)) + geom_histogram(boundary = 0, binwidth = 0.5, colour = 'white')
+  AnswerTests: omnitest(correctExpr = 'ggplot(lm_coefs, aes(x = Intercept)) + geom_histogram(boundary = 0, binwidth = 0.5, colour = "white")')
+  Hint: Copy the code from above.
+  
+- Class: text
+  Output: As you can see, there is quite a bit of variation but also a noticeable peak.
+  
+- Class: text
+  Output: "Let's plot the intercept as a function of the average value in the RNA-seq. However, a simple scatter plot is not very useful due to the density of points. In this situations, a 2D version of the histogram can be useful `geom_bin2d()` and `geom_hex()` are two good options."
+  
+- Class: cmd_question
+  Output: "Try this: 'ggplot(lm_coefs, aes(x = Mean_R, y = Intercept)) + geom_hex()'"
+  CorrectAnswer: ggplot(lm_coefs, aes(x = Mean_R, y = Intercept)) + geom_hex()
+  AnswerTests: omnitest(correctExpr = 'ggplot(lm_coefs, aes(x = Mean_R, y = Intercept)) + geom_hex()')
+  Hint: Copy the code from above.
+
+- Class: cmd_question
+  Output: Try plotting a histogram of lm_coefs, with 'Slope' on the x-axis.
+  CorrectAnswer: ggplot(lm_coefs, aes(x = Slope)) + geom_histogram()
+  AnswerTests: omnitest(correctExpr = 'ggplot(lm_coefs, aes(x = Slope)) + geom_histogram()')
+  Hint: Try typing 'ggplot(lm_coefs, aes(x = Slope)) + geom_histogram()'
+  
+- Class: cmd_question
+  Output: In the case of the slope values, the histogram is made useless because of presumably an outlier. We can check this by calling summary() on lm_coefs$Slope. Try it!
+  CorrectAnswer: summary(lm_coefs$Slope)
+  AnswerTests: omnitest(correctExpr = 'summary(lm_coefs$Slope)')
+  Hint: Try typing 'summary(lm_coefs$Slope)'
+  
+- Class: text
+  Output: Indeed, the maximum value is much higher than the median, mean and even the 3rd quartile.
+  
+- Class: cmd_question
+  Output: "We will have to adjust the binwidth and the x-axis limits of our histogram to gain further insight. Try this: 'ggplot(lm_coefs, aes(x = Slope)) + geom_histogram(binwidth = 0.1, boundary = 0, colour = 'white') + coord_cartesian(xlim = c(-0.5, 2.5))'"
+  CorrectAnswer: ggplot(lm_coefs, aes(x = Slope)) + geom_histogram(binwidth = 0.1, boundary = 0, colour = 'white') + coord_cartesian(xlim = c(-0.5, 2.5))
+  AnswerTests: omnitest(correctExpr = 'ggplot(lm_coefs, aes(x = Slope)) + geom_histogram(binwidth = 0.1, boundary = 0, colour = "white") + coord_cartesian(xlim = c(-0.5, 2.5))')
+  Hint: Copy the code from above.
+  
+- Class: text
+  Output: "From the fixed histogram, we can see that the slopes vary considerably. There is no peak though like the intercepts. But if anything, this tells us that one model is unlikely to perform  very well with predicting the microarray values from rnaseq values. Gene-specific models would probably be better suited."
+  
+- Class: text
+  Output: "In the previous examples, we explored the relationship between continuous variables. However, linear regression can also be used to explore the relationship between an independent categorical variable and a dependent continuous variable. Dependent categorical variables will be the subject of a future tutorial, where we will learn logistic regression."
+  
+- Class: text
+  Output: "Let's start with the simplest case, where we have only two possible values for the independent categorical variable. The trick is to encode one value as 0 and the other as 1, which is known as a dummy variable or one-hot encoding. You can think of these binary 0/1 variables as No/Yes variables for various states."
+
+- Class: text
+  Output: "For this example, we will compare the expression of XIST between males and females."
+  
+- Class: cmd_question
+  Output: "First, we will extract the Xist expression data from our rnaseq data like so: xist_expr <- rnaseq_wide %>% select(Tumour, XIST) %>% left_join(metadata, by = 'Tumour')"
+  CorrectAnswer: xist_expr <- rnaseq_wide %>% select(Tumour, XIST) %>% left_join(metadata, by = 'Tumour')
+  AnswerTests: omnitest(correctExpr = 'xist_expr <- rnaseq_wide %>% select(Tumour, XIST) %>% left_join(metadata, by = "Tumour")')
+  Hint: Copy the code from above.
+  
+- Class: cmd_question
+  Output: "In this case, we will encode females as 1 and males as 0. Try this: 'xist_expr <- xist_expr %>% mutate(Is_Female = ifelse(Sex == 'F', 1, 0))'"
+  CorrectAnswer: xist_expr <- xist_expr %>% mutate(Is_Female = ifelse(Sex == 'F', 1, 0))'
+  AnswerTests: omnitest(correctExpr = 'xist_expr <- xist_expr %>% mutate(Is_Female = ifelse(Sex == "F", 1, 0))')
+  Hint: Copy the code from above.
+  
+- Class: cmd_question
+  Output: Now we can plot the linear regression like previously practiced. Add '+ scale_x_continuous(breaks = c(0, 1))' to adjust the x-axis to our 0 and 1 values.
+  CorrectAnswer: ggplot(xist_expr, aes(x = Is_Female, y = XIST)) + geom_point() + geom_smooth(method = "lm") + scale_x_continuous(breaks = c(0, 1))
+  AnswerTests: omnitest(correctExpr = 'ggplot(xist_expr, aes(x = Is_Female, y = XIST)) + geom_point() + geom_smooth(method = "lm") + scale_x_continuous(breaks = c(0, 1))')
+  Hint: Try 'ggplot(xist_expr, aes(x = Is_Female, y = XIST)) + geom_point() + geom_smooth(method = "lm") + scale_x_continuous(breaks = c(0, 1))'
+  
+- Class: cmd_question
+  Output: Compute the linear regression with lm(). The formula would be XIST ~ Is_Female. Assign the results to xist_lm.
+  CorrectAnswer: xist_lm <- lm(XIST ~ Is_Female, xist_expr)
+  AnswerTests: omnitest(correctExpr = 'xist_lm <- lm(XIST ~ Is_Female, xist_expr)')
+  Hint: Try 'xist_lm <- lm(XIST ~ Is_Female, xist_expr)'
+  
+- Class: cmd_question
+  Output: Now, take a look at the summary() of xist_lm.
+  CorrectAnswer: summary(xist_lm)
+  AnswerTests: omnitest(correctExpr = 'summary(xist_lm)')
+  Hint: Try typing 'summary(xist_lm)'
+  
+- Class: text
+  Output: "In the plot, we can see a clear association between the Is_Female binary (0/1) variable and XIST expression. The P-value for the linear regression is 2.28e-09, which is very small. The coefficient for `Is_Female` corresponds to the average difference when 'you go from being a male to a female'."
   
 
-
+  
+  
