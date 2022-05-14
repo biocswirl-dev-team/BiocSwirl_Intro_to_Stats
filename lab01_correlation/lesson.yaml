@@ -1,10 +1,42 @@
 - Class: meta
   Course: intro_to_stats
   Lesson: lab01_correlation
-  Author: your name goes here
+  Author: Sourav Singh, Bruno Grande
   Type: Standard
   Organization: your organization's name goes here
   Version: 2.4.5
 
 - Class: text
   Output: Welcome to the correlation lesson!
+
+- Class: text
+  Output: The previous lesson covered how to use the `ggplot2` package to visualize data and gather further insights on the data. This lesson plan would cover various statistical approaches that can allow us to better interpret our data.
+  
+- Class: text
+  Output: This tutorial will cover the use of two statistical methods: correlation and two-sample tests. These are inescapable in the life sciences. You will learn what each method can achieve, what information they can provide, how to interpret the outcome, and how to visualize the results.
+
+- Class: text
+  Output: First we shall use the gene expression dataset as part of this lesson plan. The data has been adapted from Chan, Chang S., et al. Nature communications 9.1 (2018): 1-10. https://doi.org/10.1038/s41467-018-06498-2
+
+- Class: cmd_question
+  Output: "First, we will start off by loading the metadata file. metadata <- read.csv("data/pannets_metadata.csv")'"
+  CorrectAnswer: metadata <- read.csv("data/pannets_metadata.csv")
+  AnswerTests: omnitest(correctExpr = 'metadata <- read.csv("data/pannets_metadata.csv")')
+  Hint: Try copying the read.csv code from the text above.
+  
+- Class: cmd_question
+  Output: "Next, we shall load the gene expression dataset. rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")'"
+  CorrectAnswer: rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")
+  AnswerTests: omnitest(correctExpr = 'rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")')
+  Hint: Try copying the read.csv code from the text above.
+  
+- Class: mult_question
+  Output: How do we display the first few rows of the rnaseq gene expression dataset?
+  AnswerChoices: summary(rnaseq);tail(rnaseq);head(rnaseq);dim(rnaseq)
+  CorrectAnswer: head(rnaseq)
+  AnswerTests: omnitest(correctVal = 'head(rnaseq)')
+  Hint: Check the output of 'head(rnaseq)'
+  
+ 
+
+  
