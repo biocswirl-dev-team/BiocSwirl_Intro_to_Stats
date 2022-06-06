@@ -25,7 +25,7 @@
   Hint: Try copying the read.csv code from the text above.
   
 - Class: cmd_question
-  Output: "Next, we shall load the gene expression dataset. rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")'"
+  Output: "Next, we shall load the RNAseq gene dataset. rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")'"
   CorrectAnswer: rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")
   AnswerTests: omnitest(correctExpr = 'rnaseq <- read_csv("data/pannets_expr_rnaseq.csv.gz")')
   Hint: Try copying the read.csv code from the text above.
@@ -36,7 +36,62 @@
   CorrectAnswer: head(rnaseq)
   AnswerTests: omnitest(correctVal = 'head(rnaseq)')
   Hint: Check the output of 'head(rnaseq)'
-  
- 
 
+- Class: cmd_question
+  Output: "Now we need to create pivot table in long form for expression data. columns should be -Gene, names_to should be Tumor and values_to should be Expr. Store it into rnaseq_long."
+  CorrectAnswer: rnaseq_long <- pivot_longer(rnaseq, cols = -Gene, names_to = "Tumour", values_to = "Expr")
+  AnswerTests: omnitest(correctExpr = 'rnaseq_long <- pivot_longer(rnaseq, cols = -Gene, names_to = "Tumour", values_to = "Expr")')
   
+- Class: cmd_question
+  Output: "Use the Pivot table created before to create another pivot table in wide form. Identifier columns should be Tumour, names parameter should be Gene and values should be obtained from Expr."
+  CorrectAnswer: rnaseq_wide <- pivot_wider(rnaseq_long, id_cols = Tumour, names_from = Gene, values_from = Expr)
+  AnswerTests: omnitest(correctExpr = 'rnaseq_wide <- pivot_wider(rnaseq_long, id_cols = Tumour, names_from = Gene, values_from = Expr)')
+  
+  
+- Class: cmd_question
+  Output: "Next, we shall load the microarray gene expression dataset. array <- read_csv("data/pannets_expr_array.csv.gz")'"
+  CorrectAnswer: array <- read_csv("data/pannets_expr_array.csv.gz")
+  AnswerTests: omnitest(correctExpr = 'array <- read_csv("data/pannets_expr_array.csv.gz")')
+  Hint: Try copying the read.csv code from the previous commands.
+
+
+- Class: cmd_question
+  Output: "Now we need to create pivot table in long form for gene expression data. The pivot table should be stored in array_long."
+  CorrectAnswer: array_long <- pivot_longer(array, cols = -Gene, names_to = "Tumour", values_to = "Expr")
+  AnswerTests: omnitest(correctExpr = 'array_long <- pivot_longer(array, cols = -Gene, names_to = "Tumour", values_to = "Expr")')
+  Hint: Look at the command we executed previously for the idea.
+  
+- Class: cmd_question
+  Output: "Now we create a Pivot table in Long form using the array_long variable. The data should be stored in array_wide."
+  CorrectAnswer: array_wide <- pivot_wider(array_long, id_cols = Tumour, names_from = Gene, values_from = Expr)
+  AnswerTests: omnitest(correctExpr = 'array_wide <- pivot_wider(array_long, id_cols = Tumour, names_from = Gene, values_from = Expr)')
+  Hint: Look at the command we have written to create a wide pivot table for RNASeq data.
+
+- Class: text
+  Output: Now we compare ACTB gene expression between RNA-seq and microarray data. For this we first need to create a dataframe, create a scatterplot between RNASeq Gene Expression vs microarray gene expression.
+
+- Class: cmd_question
+  Output: "Lets start by creating a data frame for Tumor vs ACTB gene expression. For this we need to create three columns- tumour, rnaseq and array and obtain data for these columns from the rnaseq_wide and array_wide data for ACTB"
+  CorrectAnswer: actb <- data.frame(tumour = rnaseq_wide$Tumour, rnaseq = rnaseq_wide$ACTB, array = array_wide$ACTB)
+  AnswerTests: omnitest(correctExpr = 'actb <- data.frame(tumour = rnaseq_wide$Tumour, rnaseq = rnaseq_wide$ACTB, array = array_wide$ACTB)')
+  
+
+- Class: cmd_question
+  Output: "Now lets create a scatter plot to find the relation between RNASeq Gene Expression vs Microarray Gene Expression"
+  CorrectAnswer: ggplot(actb, aes(x = rnaseq, y = array)) + geom_point() + labs(title = "ACTB expression")
+  AnswerTests: omnitest(correctExpr = 'ggplot(actb, aes(x = rnaseq, y = array)) + geom_point() + labs(title = "ACTB expression")')
+  
+- Class: text
+  Output: For calculating correlations between two variables, we have the cor() function which takes as parameters the variables between which the correlations need to be calculated and the method of calculation for correlation.
+  
+- Class: cmd_question
+  Output: "Let us first calculate the correlation between RNAseq and microarray using pearson method."
+  CorrectAnswer: cor(actb$rnaseq, actb$array, method = "pearson")
+  AnswerTests: omnitest(correctExpr = 'cor(actb$rnaseq, actb$array, method = "pearson")')
+  
+- Class: cmd_question
+  Output: "Let us first calculate the correlation between RNAseq and microarray using spearman method."
+  CorrectAnswer: cor(actb$rnaseq, actb$array, method = "pearson")
+  AnswerTests: omnitest(correctExpr = 'cor(actb$rnaseq, actb$array, method = "spearman")') 
+
+
